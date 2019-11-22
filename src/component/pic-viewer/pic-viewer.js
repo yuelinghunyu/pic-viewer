@@ -69,7 +69,7 @@ class PicViewer extends Component{
             urlList.map((url, index) => {
               return(
                 <div 
-                  className={classNames("swiper-slide", {'swiper-no-swiping': true})}
+                  className={classNames("swiper-slide", {'swiper-no-swiping': false})}
                   key={index}
                 >
                   <img
