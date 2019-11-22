@@ -13,15 +13,15 @@ import { getStyle } from "@/plugin/utils"
 new VConsole()
 
 
-class PicViewer extends Component{
-  constructor(props){
+class PicViewer extends Component {
+  constructor(props) {
     super(props)
     this.state = {
       hammerList: [],
     }
   }
 
-  componentDidMount(){
+  componentDidMount() {
     // 初始化swiper
     new Swiper(ReactDOM.findDOMNode(this.swiper), {
       initialSlide: this.props.currentIndex
@@ -31,8 +31,8 @@ class PicViewer extends Component{
     const hammerList = []
     Array.from(swiperSlide).forEach(slide => {
       const hammer = new Hammer(slide)
-      hammer.get('pan').set({enable: true})
-      hammer.get('pinch').set({enable: true})
+      hammer.get('pan').set({ enable: true })
+      hammer.get('pinch').set({ enable: true })
       hammerList.push(hammer)
       this.updateGestrueEvent(hammer)
     })
@@ -48,48 +48,48 @@ class PicViewer extends Component{
     })
   }
   // 关闭遮罩层
-  handleCloseEvent(){
+  handleCloseEvent() {
     store.dispatch(boundClosePicViewer(true))
   }
-  render(){
+  render() {
     let { urlList } = this.props
-    return(
+    return (
       <div className="pic-viewer_container">
-        <span 
+        <span
           className="pic-viewer_close iconfont icon-guanbi"
           onClick={this.handleCloseEvent}
         ></span>
-        <div 
+        <div
           className="pic-viewer_swiper-container"
           ref={el => this.swiper = el}
         >
           <div className="swiper-wrapper">
-          {
-            urlList.length ?
-            urlList.map((url, index) => {
-              return(
-                <div 
-                  className={classNames("swiper-slide", {'swiper-no-swiping': false})}
-                  key={index}
-                >
-                  <img
-                    className="swiper-slide-img"
-                    src={url}
-                  />
-                </div>
-              )
-            }): null
-          }
+            {
+              urlList.length ?
+                urlList.map((url, index) => {
+                  return (
+                    <div
+                      className={classNames("swiper-slide", { 'swiper-no-swiping': false })}
+                      key={index}
+                    >
+                      <img
+                        className="swiper-slide-img"
+                        src={url}
+                      />
+                    </div>
+                  )
+                }) : null
+            }
           </div>
         </div>
         <div className="pic-viewer_operate">
           <span
             className="pic-viewer_operate-scale"
           >
-            <i 
+            <i
               className="iconfont icon-jia"
             ></i>
-            <i 
+            <i
               className="iconfont icon-jian"
             ></i>
           </span>
@@ -106,7 +106,7 @@ PicViewer.propTypes = {
 PicViewer.instance = (option) => {
   let props = option || {}
   let div = document.createElement("div")
-  div.className="pic-viewer"
+  div.className = "pic-viewer"
   document.body.appendChild(div)
   ReactDOM.render(React.createElement(PicViewer, props), div)
   return {
