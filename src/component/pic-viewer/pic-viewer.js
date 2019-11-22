@@ -9,7 +9,7 @@ import "swiper/css/swiper.min.css"
 import Hammer from 'hammerjs'
 import VConsole from 'vconsole/dist/vconsole.min.js'
 import "./pic-viewer.scss"
-import { getStyle } from "@/plugin/utils"
+import { getStyle, stylePrefix, getTransformAttr} from "@/plugin/utils"
 new VConsole()
 
 
@@ -39,12 +39,18 @@ class PicViewer extends Component{
   }
   // 监听当前dom的手势事件
   updateGestrueEvent(hammer) {
-    hammer.on("panmove", (ev) => {
-      console.log(ev)
-    })
-    hammer.on('pinchin', (ev) => {
-    })
-    hammer.on('pinchout', (ev) => {
+    hammer.on('pinchstart pinchin pinchout', (ev) => {
+      const type = ev.type
+      const target = ev.target
+      let initScale = 1
+      if(type === 'pinchstart') {
+        initScale = getTransformAttr(getStyle(target, "transform"), "scale") || 1
+        console.log("initScale1", initScale)
+      }
+      if(type === 'pinchout') {
+        console.log("initScale2", initScale)
+        target.style.transform = `scale(${ev.scale * initScale})`
+      }
     })
   }
   // 关闭遮罩层

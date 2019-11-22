@@ -29,7 +29,18 @@ const stylePrefix = (style) => {
   }
   return getPrefix + style.charAt(0).toUpperCase() + style.substr(1)
 }
+// 获取transform的值
+const getTransformAttr = (transform, attr) => {
+  if(transform === 'none') return
+  const lg = transform.length
+  const matrix = transform.substring(7, lg-1)
+  const matrixList = matrix.split(",")
+  if(attr === "scale") {
+    return matrixList[0]
+  }
+}
 export {
   getStyle,
-  stylePrefix
+  stylePrefix,
+  getTransformAttr
 }
