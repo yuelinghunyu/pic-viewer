@@ -47,29 +47,35 @@ class PicViewer extends Component {
     })
     this.setState({
       center: this.point2D(swiperSlide[0].offsetWidth/2, swiperSlide[0].offsetHeight/2)
+    }, () => {
+      console.log(this.state.center)
     })
   }
   // 监听当前dom的手势事件
   updateGestrueEvent(hammer) {
     hammer.on('panstart', (ev) => {
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       this.setState({
         lastTranslate: this.point2D(this.state.tMatrix[4], this.state.tMatrix[5]) //缓存上一次的偏移值
       })
     })
     hammer.on("panmove", (ev) => {
-      let tMatrix = this.state.tMatrix
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       const target = ev.target
+      let duration = ""
+      let tMatrix = this.state.tMatrix
       tMatrix[4] = this.state.lastTranslate.x + ev.deltaX
-		  tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
+      tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
       this.setState({
         tMatrix: tMatrix,
-        duration: ""
+        duration: duration
       }, () => {
         target.style.transition = this.state.duration
         target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
       })
     })
     hammer.on('pinchstart', (ev) => {
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       const initScale = this.state.tMatrix[0] || 1// 记录上一次的scale值
       const lastTranslate = this.point2D(this.state.tMatrix[4], this.state.tMatrix[5]) // 记录上次的偏移值
       let poscenter = this.point2D(ev.center.x, ev.center.y)
@@ -84,6 +90,7 @@ class PicViewer extends Component {
       })
     })
     hammer.on('pinchmove', (ev) => {
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       let tMatrix = this.state.tMatrix
       const target = ev.target
       tMatrix[0] = tMatrix[3] = this.state.initScale * ev.scale
@@ -107,19 +114,31 @@ class PicViewer extends Component {
   endReset(ev){
     let tMatrix = this.state.tMatrix
     const target = ev.target
+    let scale = 1
     console.log(tMatrix.join(","))
     if(tMatrix[0] <= 1) {
       tMatrix[0] = tMatrix[3] = 1
       tMatrix[4] = tMatrix[5] = 0
-      this.setState({
-        initScale: 1,
-        tMatrix: tMatrix,
-        duration: ".3s ease all"
-      }, () => {
-        target.style.transition = this.state.duration
-        target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
-      })
+    } else {
+      const borderX = this.state.center.x * (tMatrix[0] - 1)
+      if(Math.abs(tMatrix[4]) >= borderX) {
+        if(tMatrix[4] > 0) {
+          tMatrix[4] = borderX
+        } else {
+          tMatrix[4] = -borderX
+        }
+        tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
+      }
+      scale = tMatrix[0]
     }
+    this.setState({
+      initScale: scale,
+      tMatrix: tMatrix,
+      duration: ".3s ease all"
+    }, () => {
+      target.style.transition = this.state.duration
+      target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
+    })
   }
   // 关闭遮罩层
   handleCloseEvent() {
