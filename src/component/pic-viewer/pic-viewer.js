@@ -9,7 +9,6 @@ import "swiper/css/swiper.min.css"
 import Hammer from 'hammerjs'
 import VConsole from 'vconsole/dist/vconsole.min.js'
 import "./pic-viewer.scss"
-import { getStyle, stylePrefix, getTransformAttr} from "@/plugin/utils"
 new VConsole()
 
 
@@ -24,7 +23,9 @@ class PicViewer extends Component {
       lastTranslate: this.point2D(0, 0), //记录上次的偏移值
       lastcenter: this.point2D(0, 0), //图像的中心点，用于对比双指中心点
       center: this.point2D(0, 0),
-      duration: ""
+      duration: "",
+      maxHeight: 0,
+      swiperDisable: false
     }
   }
   point2D(x, y) {
@@ -33,7 +34,12 @@ class PicViewer extends Component {
   componentDidMount() {
     // 初始化swiper
     new Swiper(ReactDOM.findDOMNode(this.swiper), {
-      initialSlide: this.props.currentIndex
+      initialSlide: this.props.currentIndex,
+      on: {
+        slideChangeTransitionEnd: () => {
+          this.handleTransitionEnd()
+        }
+      }
     })
     // 初始化slide 和 img
     const swiperSlide = document.getElementsByClassName("swiper-slide")
@@ -46,9 +52,11 @@ class PicViewer extends Component {
       this.updateGestrueEvent(hammer)
     })
     this.setState({
-      center: this.point2D(swiperSlide[0].offsetWidth/2, swiperSlide[0].offsetHeight/2)
+      center: this.point2D(swiperSlide[0].offsetWidth/2, swiperSlide[0].offsetHeight/2),
+      maxHeight: swiperSlide[0].offsetHeight
     }, () => {
-      console.log(this.state.center)
+      // console.log(this.state.center)
+      // console.log(this.state.maxHeight)
     })
   }
   // 监听当前dom的手势事件
@@ -64,12 +72,27 @@ class PicViewer extends Component {
       const target = ev.target
       let duration = ""
       let tMatrix = this.state.tMatrix
+      let swiperDisable = this.state.swiperDisable
       tMatrix[4] = this.state.lastTranslate.x + ev.deltaX
+      const borderX = this.state.center.x * (tMatrix[0] - 1)
+      console.log(tMatrix[4])
+      if(Math.abs(tMatrix[4]) > borderX) { // 这是x方向的边界
+        if(tMatrix[4] > 0) {
+          tMatrix[4] = borderX
+        } else {
+          tMatrix[4] = -borderX
+        }
+        swiperDisable = false
+      } else {
+        swiperDisable = true
+      }
       tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
       this.setState({
         tMatrix: tMatrix,
-        duration: duration
+        duration: duration,
+        swiperDisable: swiperDisable,
       }, () => {
+        console.log(this.state.swiperDisable)
         target.style.transition = this.state.duration
         target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
       })
@@ -98,43 +121,71 @@ class PicViewer extends Component {
       tMatrix[5] = (1 - ev.scale) * this.state.poscenter.y + this.state.lastTranslate.y
       this.setState({
         tMatrix: tMatrix,
-        duration: ""
+        duration: "",
+        swiperDisable: true
       }, () => {
         target.style.transition = this.state.duration
         target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
       })
     })
     hammer.on('panend', (ev) => {
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       this.endReset(ev)
     })
     hammer.on('pinchend', (ev) => {
+      if(!ev.target.classList.contains("swiper-slide-img")) return false
       this.endReset(ev)
+    })
+  }
+  handleTransitionEnd() {
+    this.setState({
+      initScale: 1,
+      tMatrix: [1,0,0,1,0,0], //x缩放，无，无，y缩放，x平移，y平移
+      poscenter: this.point2D(0, 0), //缓存双指的中心坐标
+      lastTranslate: this.point2D(0, 0), //记录上次的偏移值
+      lastcenter: this.point2D(0, 0), //图像的中心点，用于对比双指中心点
+      duration: "",
+      swiperDisable: false
+    }, () => {
+      const swiperSlideImgs = document.getElementsByClassName("swiper-slide-img")
+      Array.from(swiperSlideImgs).forEach(img => {
+        img.style.transform = `matrix(${this.state.tMatrix.join(",")})`
+      })
     })
   }
   endReset(ev){
     let tMatrix = this.state.tMatrix
     const target = ev.target
+    const originHeight = target.offsetHeight
+    let swiperDisable = this.state.swiperDisable
     let scale = 1
-    console.log(tMatrix.join(","))
     if(tMatrix[0] <= 1) {
       tMatrix[0] = tMatrix[3] = 1
       tMatrix[4] = tMatrix[5] = 0
+      swiperDisable = false
     } else {
-      const borderX = this.state.center.x * (tMatrix[0] - 1)
-      if(Math.abs(tMatrix[4]) >= borderX) {
-        if(tMatrix[4] > 0) {
-          tMatrix[4] = borderX
-        } else {
-          tMatrix[4] = -borderX
+      tMatrix[0] = tMatrix[3] = tMatrix[0] <= 3 ? tMatrix[0] : 3
+      if(originHeight * tMatrix[0] > this.state.maxHeight) {
+        const borderY = Math.abs(originHeight / 2 * tMatrix[0] - this.state.center.y)
+        if(Math.abs(tMatrix[5]) >= borderY) {
+          if(tMatrix[5] > 0) {
+            tMatrix[5] = borderY
+          } else {
+            tMatrix[5] = -borderY
+          }
         }
-        tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
+      }
+      if(originHeight * tMatrix[0] <= this.state.maxHeight) {
+        tMatrix[5] = 0
       }
       scale = tMatrix[0]
     }
+    // console.log(tMatrix.join(","))
     this.setState({
       initScale: scale,
       tMatrix: tMatrix,
-      duration: ".3s ease all"
+      duration: ".3s ease all",
+      swiperDisable: swiperDisable
     }, () => {
       target.style.transition = this.state.duration
       target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
@@ -162,7 +213,7 @@ class PicViewer extends Component {
                 urlList.map((url, index) => {
                   return (
                     <div
-                      className={classNames("swiper-slide", { 'swiper-no-swiping': true })}
+                      className={classNames("swiper-slide", { 'swiper-no-swiping': this.state.swiperDisable })}
                       key={index}
                     >
                       <img
