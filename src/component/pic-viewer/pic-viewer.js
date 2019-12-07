@@ -73,9 +73,8 @@ class PicViewer extends Component {
       let duration = ""
       let tMatrix = this.state.tMatrix
       let swiperDisable = this.state.swiperDisable
-      tMatrix[4] = this.state.lastTranslate.x + ev.deltaX
       const borderX = this.state.center.x * (tMatrix[0] - 1)
-      console.log(tMatrix[4])
+      tMatrix[4] = this.state.lastTranslate.x + ev.deltaX
       if(Math.abs(tMatrix[4]) > borderX) { // 这是x方向的边界
         if(tMatrix[4] > 0) {
           tMatrix[4] = borderX
@@ -86,6 +85,8 @@ class PicViewer extends Component {
       } else {
         swiperDisable = true
       }
+      console.log(tMatrix[4])
+      console.log(ev.direction)
       tMatrix[5] = this.state.lastTranslate.y + ev.deltaY
       this.setState({
         tMatrix: tMatrix,
@@ -95,6 +96,7 @@ class PicViewer extends Component {
         console.log(this.state.swiperDisable)
         target.style.transition = this.state.duration
         target.style.transform = `matrix(${this.state.tMatrix.join(",")})`
+        console.log(this.swiperSlide)
       })
     })
     hammer.on('pinchstart', (ev) => {
@@ -215,6 +217,7 @@ class PicViewer extends Component {
                     <div
                       className={classNames("swiper-slide", { 'swiper-no-swiping': this.state.swiperDisable })}
                       key={index}
+                      ref={el => this.swiperSlide = el}
                     >
                       <img
                         className="swiper-slide-img"
@@ -226,7 +229,7 @@ class PicViewer extends Component {
             }
           </div>
         </div>
-        <div className="pic-viewer_operate">
+        {/* <div className="pic-viewer_operate">
           <span
             className="pic-viewer_operate-scale"
           >
@@ -237,7 +240,7 @@ class PicViewer extends Component {
               className="iconfont icon-jian"
             ></i>
           </span>
-        </div>
+        </div> */}
       </div>
     )
   }
