@@ -58,7 +58,7 @@
     "html-withimg-loader": "^0.1.16",
     "less-loader": "^4.1.0",
     "marked": "^0.7.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "postcss-loader": "^3.0.0",
     "postcss-safe-parser": "^4.0.1",
