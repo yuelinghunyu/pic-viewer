@@ -64,7 +64,7 @@
     "postcss-safe-parser": "^4.0.1",
     "purify-css": "^1.2.5",
     "purifycss-webpack": "^0.7.0",
-    "qs": "^6.9.0",
+    "qs": "^6.9.7",
     "react-transition-group": "^4.3.0",
     "redux": "^4.0.4",
     "redux-thunk": "^2.3.0",
